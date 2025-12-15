@@ -1,1 +1,1 @@
-# AstrodynamicsCore.jl
+# `AstrodynamicsCore.jl`: core astrodynamics routines
