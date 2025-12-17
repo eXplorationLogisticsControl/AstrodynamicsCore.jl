@@ -4,9 +4,16 @@ version = "0.1.0"
 authors = ["Yuri <yuri.shimane@gmail.com>"]
 
 [deps]
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PrettyTrajectory = "013a5753-8664-40cd-ac6d-43948d7e8f1b"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+FileIO = "1.17.1"
+GeometryBasics = "0.5.10"
 LinearAlgebra = "1"
+Printf = "1.11.0"
 Test = "1"
