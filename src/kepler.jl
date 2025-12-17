@@ -1,0 +1,332 @@
+"""
+Function for propagate using Kepler's equation with G. Der (1996)'s formulation
+"""
+
+
+"""
+    hypertrig_s(z, epsilon::Real=1e-6)
+
+Hyperbolic sine function
+"""
+function hypertrig_s(z, epsilon::Real=1e-6)
+    if z > epsilon
+        s = (sqrt(z) - sin(sqrt(z))) / (sqrt(z))^3
+    elseif z < -epsilon
+        s = (sinh(sqrt(-z)) - sqrt(-z)) / (sqrt(-z))^3
+    else
+        s = 1/6 - z/120 + z^2/5040 - z^3/362880
+    end
+    return s
+end
+
+
+"""
+    hypertrig_c(z, epsilon::Real=1e-6)
+
+Hyperbolic cosine function
+"""
+function hypertrig_c(z, epsilon::Real=1e-6)
+    if z > epsilon
+        c = (1.0 - cos(sqrt(z))) / z
+    elseif z < -epsilon
+        c = (cosh(-z) - 1) / (-z)
+    else
+        c = 1/2 - z/24 + z^2/720 - z^3/40320
+    end
+    return c
+end
+
+
+
+
+"""Lagrange parameter functions"""
+function universal_functions(x, alpha::Float64)
+    """Function computes U0 ~ U3 from G. Der 1996"""
+    # evaluate hypertrig function
+    S = hypertrig_s(alpha * x^2)
+    C = hypertrig_c(alpha * x^2)
+    # parameters
+    u0 = 1 - alpha * x^2 * C
+    u1 = x * (1 - alpha * x^2 * S)
+    u2 = x^2 * C
+    u3 = x^3 * S
+    return u0, u1, u2, u3
+end
+
+
+"""Function computes Kepler's time equation and its derivatives in G. Der 1996 form"""
+function kepler_der_residual(
+    x,
+    alpha::Float64,
+    t,
+    t0,
+    mu::Float64,
+    r0::Float64,
+    sigma0::Float64,
+)
+    u0, u1, u2, u3 = universal_functions(x, alpha)
+    Fun = r0 * u1 + sigma0 * u2 + u3 - sqrt(mu) * (t - t0)
+    dF = r0 * u0 + sigma0 * u1 + u2
+    d2F = sigma0 * u0 + (1 - alpha * r0) * u1
+    return Fun, dF, d2F
+end
+
+
+"""Function computes Lagrange coefficients (as functionined in G. Der 1996)"""
+function lagrange_coefficients_der(
+    mu::Real,
+    alpha::Real,
+    r0::Real,
+    v0::Real,
+    sigma0,
+    u0,
+    u1,
+    u2,
+    u3,
+    r,
+    sigma,
+)
+    # scalar function
+    f = 1.0 - u2 / r0
+    g = r0 * u1 / sqrt(mu) + sigma0 * u2 / sqrt(mu)
+    fdot = -sqrt(mu) / (r * r0) * u1
+    gdot = 1.0 - u2 / r
+    return f, g, fdot, gdot
+end
+
+
+"""Scalar coefficients of STM dyads (eqn.18)"""
+function der_stm_coefs(
+    mu::Real,
+    alpha::Float64,
+    r0::Float64,
+    v0::Float64,
+    r::Float64,
+    u0::Float64,
+    u1::Float64,
+    u2::Float64,
+    u3::Float64,
+    sigma0::Float64,
+    sigma::Float64,
+)
+    # first row coefficients
+    c11 =
+        1 / (alpha * r * r0^2) * (3 * u1 * u3 + (alpha * r0 - 2) * u2^2) +
+        u1^2 / r +
+        u2 / r0
+    c12 = v0 * u1 * u2 / (r * sqrt(mu))
+    c13 =
+        v0 / (alpha * r * r0^2 * sqrt(mu)) * (
+            r0 * u1 * u2 + 2 * sigma0 * u2^2 + 3 * u2 * u3 - 3 * r * u3 +
+            alpha * r0^2 * u1 * u2
+        )
+    c14 = v0^2 * u2^2 / (r * mu)
+    # second row
+    c21 = r0 * u1 * u2 / (r * sqrt(mu))
+    c22 = v0 / (alpha * r * mu) * (3 * u1 * u3 + (alpha * r0 - 2) * u2^2)
+    c23 = r0 * v0 * u2^2 / (r * mu)
+    c24 =
+        v0^2 / (alpha * r * mu * sqrt(mu)) *
+        (r0 * u1 * u2 + 2 * sigma0 * u2^2 + 3 * u2 * u3 - 3 * r * u3)
+    # third row
+    c31 =
+        sqrt(mu) / (alpha * r^3 * r0^2) * (
+            r * (3 * u0 * u3 - u1 * u2 + 2 * alpha * r0 * u1 * u2) -
+            sigma * (3 * u1 * u3 - 2 * u2^2 + alpha * r0 * u2^2)
+        ) + sqrt(mu) / (r^3 * r0) * (2 * r * r0 * u0 * u1 + r^2 * u1 - sigma * r0 * u1^2)
+    c32 = v0 / r^3 * (r * (u0 * u2 + u1^2) - sigma * u1 * u2)
+    c33 =
+        -3 * v0 * u2 / (alpha * r * r0^2) +
+        v0 / (alpha * r^2 * r0^2) *
+        (4 * sigma0 * u1 * u2 + r0 * (u0 * u2 + u1^2) - 3 * (u1 * u3 + u2^2)) -
+        sigma * v0 * u2 / (alpha * r^3 * r0^2) * (r0 * u1 + 2 * sigma0 * u2 + 3 * u3) +
+        v0 / r^3 * (r * (u0 * u2 + u1^2) - sigma * u1 * u2)
+    c34 = v0^2 / (r^3 * sqrt(mu)) * (2 * r * u1 * u2 - sigma * u2^2)
+    # fourth row
+    c41 = r0 / r^3 * (r * (u0 * u2 + u1^2) - sigma * u1 * u2)
+    c42 =
+        v0 / (alpha * r^3 * sqrt(mu)) * (
+            r * (3 * u0 * u3 - u1 * u2 + 2 * alpha * r0 * u1 * u2) -
+            sigma * (3 * u1 * u3 - 2 * u2^2 + alpha * r0 * u2^2)
+        )
+    c43 = r0 * v0 / (r^3 * sqrt(mu)) * (2 * r * u1 * u2 - sigma * u2^2)
+    c44 =
+        -3 * v0^2 * u2 / (alpha * r * mu) +
+        v0^2 / (alpha * r^2 * mu) *
+        (4 * sigma0 * u1 * u2 + r0 * (u0 * u2 + u1^2) + 3 * (u1 * u3 + u2^2)) -
+        sigma * v0^2 * u2 / (alpha * r^3 * mu) * (r0 * u1 + 2 * sigma0 * u2 + 3 * u3)
+    return c11, c12, c13, c14, c21, c22, c23, c24, c31, c32, c33, c34, c41, c42, c43, c44
+end
+
+
+"""
+    propagate_lagrangian(mu::Float64, state0::Vector{Float64}, t0::Float64, t::Float64, tol::Float64=1e-12, maxiter::Int=10)
+
+Function computes position at some future time t, via Keplerian time-propagation with G. Der formulation
+
+# Arguments
+    - `mu::Float64`: gravitational parameter
+    - `state0::Array{<:Real, 1}`: initial state [x,y,z,vx,vy,vz]
+    - `t0::Float64`: initial time at state0
+    - `t::Float64`: final time
+    - `tol::Float64`: tolerance on Laguerre-correction
+    - `maxiter::Int`: max allowed iteration allowed for Laguerre-correction
+
+# Returns
+    - `tuple`: final state, final STM
+"""
+function propagate_lagrangian(
+    mu::Float64,
+    state0::Array{<:Real,1},
+    t0::Float64,
+    t::Float64,
+    tol::Float64 = 1e-12,
+    maxiter::Int = 20,
+    verbose::Bool = false,
+    stm::Bool = false,
+)
+    # ------------------------------------------ #
+    # SET-UP PROBLEM
+    r0, v0 = state0[1:3], state0[4:6]
+    sma, ecc, _, _, _, _ = rv2kep(state0, mu)
+    alpha = 1.0 / sma
+    sigma0 = dot(r0, v0) / sqrt(mu)
+
+    # ------------------------------------------ #
+    # ITERATION WITH LAGUERRE-CONWAY METHOD
+    # initial guess based on eccentricity
+    if ecc < 1
+        # initial guess for circular or elliptical case
+        x0 = alpha * sqrt(mu) * (t - t0)
+    else
+        # initial guess for parabola or hyperbola
+        x0 = sqrt(mu) * (t - t0) / (10 * norm(r0))
+    end
+    x1 = x0    # FIXME - is this the best syntax...?
+    # initialize iteratation
+    count = 0
+    Fun = 1e5  # initialize
+    while count < maxiter
+        # evaluate function
+        Fun, dF, d2F = kepler_der_residual(x0, alpha, t, t0, mu, norm(r0), sigma0)
+        if abs(Fun) < tol
+            if verbose == true
+                println("Success!")
+            end
+            break
+        end
+        # Laguerre-Conway iteration
+        x1 = x0 - 5 * Fun / (dF + dF / abs(dF) * sqrt(abs(16 * dF^2 - 20 * Fun * d2F)))
+        count += 1
+        x0 = x1
+    end
+    if abs(Fun) > tol
+        if verbose == true
+            println("Could not achieve desired tolerance, violation: ", abs(Fun))
+        end
+    end
+
+    # ------------------------------------------ #
+    # COMPUTE FINAL POSITION
+    # convert back to position
+    u0, u1, u2, u3 = universal_functions(x1, alpha)
+    r_scal = norm(r0) * u0 + sigma0 * u1 + u2
+    sigma = sigma0 * u0 + (1 - alpha * norm(r0)) * u1
+    #println("r_scal: $r_scal, sigma: $sigma")
+
+    # get lagrange coefficients
+    f, g, fdot, gdot = lagrange_coefficients_der(
+        mu,
+        alpha,
+        norm(r0),
+        norm(v0),
+        sigma0,
+        u0,
+        u1,
+        u2,
+        u3,
+        r_scal,
+        sigma,
+    )
+    #println("f: $f, g: $g, fdot: $fdot, gdot: $gdot")
+    # create map for state   # --- FIXME! can probably speed this up!
+    rmap = hcat(f * Matrix(I, 3, 3), g * Matrix(I, 3, 3))
+    vmap = hcat(fdot * Matrix(I, 3, 3), gdot * Matrix(I, 3, 3))  #concatenate((fdot*Matrix(I,3,3) , gdot*Matrix(I,3,3)), axis=1)
+    fullmap = vcat(rmap, vmap)
+    state1 = fullmap * state0
+
+    # ------------------------------------------ #
+    # COMPUTE FINAL STM
+    if stm == true
+        # submatrices M's, dyads from pg.377
+        M1 = r0 * transpose(r0) / norm(r0)^2
+        M2 = r0 * transpose(v0) / (norm(r0) * norm(v0))
+        M3 = v0 * transpose(r0) / (norm(r0) * norm(v0))
+        M4 = v0 * transpose(v0) / norm(v0)^2
+        # coefficients
+        c11, c12, c13, c14, c21, c22, c23, c24, c31, c32, c33, c34, c41, c42, c43, c44 =
+            der_stm_coefs(mu, alpha, norm(r0), norm(v0), r_scal, u0, u1, u2, u3, sigma0, sigma)
+        # construct STM
+        Rtilda = f * Matrix(I, 3, 3) + c11 * M1 + c12 * M2 + c13 * M3 + c14 * M4
+        R = g * Matrix(I, 3, 3) + c21 * M1 + c22 * M2 + c23 * M3 + c24 * M4
+        Vtilda = fdot * Matrix(I, 3, 3) + c31 * M1 + c32 * M2 + c33 * M3 + c34 * M4
+        V = gdot * Matrix(I, 3, 3) + c41 * M1 + c42 * M2 + c43 * M3 + c44 * M4
+        Φ = vcat(hcat(Rtilda, R), hcat(Vtilda, V))
+        return state1, Φ
+    else
+        return state1
+    end
+end
+
+
+"""
+    propagate_lagrangian_nostm(
+        mu::Float64,
+        state0::Vector{Float64},
+        t0::Float64,
+        ts::Union{Vector{Float64}, LinRange{Float64}},
+        tol::Float64=1.e-14,
+        maxiter::Int=20,
+    )
+
+Function computes position at future times ts, without computing STM
+Formulation from G. Der formulation.
+
+# Arguments
+    `mu::Float64`: gravitational parameter
+    `state0::Vector{Float64}`: initial state [x,y,z,vx,vy,vz]
+    `t0::Float64`: initial time at state0
+    `t::Float64`: final time
+    `tol::Float64`: tolerance on Laguerre-correction, suggest 1.e-14
+    `maxiter::Int`: max allowed iteration allowed for Laguerre-correction, suggest 10
+
+# Returns
+    `(array)`: final state
+"""
+function propagate_lagrangian(
+    mu::Float64,
+    state0::Array{<:Real,1},
+    t0::Float64,
+    ts::Union{Vector{Float64}, LinRange{Float64}},
+    tol::Float64=1.e-14,
+    maxiter::Int=20,
+)
+    # initialize array
+    rvs = zeros(6,length(ts))
+    # range of times
+    for (idx,t) in enumerate(ts)
+        rvs[:,idx] = propagate_lagrangian(mu, state0, t0, t, tol, maxiter)
+    end
+    return rvs
+end
+
+
+function time_until_θ(kep::Array{<:Real,1}, θ::Real, μ::Real)
+    a,e,_,_,_,θ0 = kep
+    E0 = 2 * atan(sqrt((1-e)/(1+e)) * tan(θ0/2))
+    E = 2 * atan(sqrt((1-e)/(1+e)) * tan(θ/2))
+    M0 = E0 - e * sin(E0)
+    M = E - e * sin(E)
+    ΔM = M - M0
+    return ΔM / sqrt(μ/a^3)
+end
