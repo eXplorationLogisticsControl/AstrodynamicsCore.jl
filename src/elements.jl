@@ -163,16 +163,8 @@ function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
 end
 
 
-function ma2ea(M::Real, e::Real; use_degrees::Bool=false)
-    # Convert degree input
-    if use_degrees == true
-        M *= pi/180.0
-    end
-
-    # Convert mean to eccentric
-    max_iter = 15
-    epsilson = eps(Float64)*100.0
-
+"""Convert mean anomaly to eccentric anomaly"""
+function ma2ea(M::Real, e::Real; maxiter::Int=20, tol::Float64=1e-14)
     # Initialize starting values
     M = mod(M, 2.0*pi)
     if e < 0.8
@@ -186,32 +178,20 @@ function ma2ea(M::Real, e::Real; use_degrees::Bool=false)
     i = 0
 
     # Iterate until convergence
-    while abs(f) > epsilson
+    for it in 1:maxiter
+        if abs(f) < tol
+            break
+        end
         f = E - e*sin(E) - M
         E = E - f / (1.0 - e*cos(E))
-
-        # Increase iteration counter
-        i += 1
-        if i == max_iter
-            error("Maximum number of iterations reached before convergence.")
-        end
     end
-
-    # Convert degree output
-    if use_degrees == true
-        E *= 180.0/pi
-    end
-
     return E
 end
 
 
-function ma2ta(M::Real, e::Real; use_degrees::Bool=false)
-	EA = anomaly_mean_to_eccentric(M, e)  # in radians
+"""Convert mean anomaly to true anomaly"""
+function ma2ta(M::Real, e::Real)
+	EA = ma2ea(M, e)  # in radians
 	ta = 2*atan(sqrt((1+e)/(1-e))*tan(EA/2))
-	# Convert degree output
-    if use_degrees == true
-        ta *= 180.0/pi
-    end
     return ta
 end
