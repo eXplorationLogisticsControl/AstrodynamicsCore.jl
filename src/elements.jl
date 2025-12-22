@@ -161,3 +161,57 @@ function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
     p = r * (1 + f * cos(L) + g * sin(L))
     return [p,f,g,h,k,L]
 end
+
+
+function ma2ea(M::Real, e::Real; use_degrees::Bool=false)
+    # Convert degree input
+    if use_degrees == true
+        M *= pi/180.0
+    end
+
+    # Convert mean to eccentric
+    max_iter = 15
+    epsilson = eps(Float64)*100.0
+
+    # Initialize starting values
+    M = mod(M, 2.0*pi)
+    if e < 0.8
+        E = M
+    else
+        E = pi
+    end
+
+    # Initialize working variable
+    f = E - e*sin(E) - M
+    i = 0
+
+    # Iterate until convergence
+    while abs(f) > epsilson
+        f = E - e*sin(E) - M
+        E = E - f / (1.0 - e*cos(E))
+
+        # Increase iteration counter
+        i += 1
+        if i == max_iter
+            error("Maximum number of iterations reached before convergence.")
+        end
+    end
+
+    # Convert degree output
+    if use_degrees == true
+        E *= 180.0/pi
+    end
+
+    return E
+end
+
+
+function ma2ta(M::Real, e::Real; use_degrees::Bool=false)
+	EA = anomaly_mean_to_eccentric(M, e)  # in radians
+	ta = 2*atan(sqrt((1+e)/(1-e))*tan(EA/2))
+	# Convert degree output
+    if use_degrees == true
+        ta *= 180.0/pi
+    end
+    return ta
+end
