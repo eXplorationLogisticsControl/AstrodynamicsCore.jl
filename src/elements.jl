@@ -161,3 +161,37 @@ function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
     p = r * (1 + f * cos(L) + g * sin(L))
     return [p,f,g,h,k,L]
 end
+
+
+"""Convert mean anomaly to eccentric anomaly"""
+function ma2ea(M::Real, e::Real; maxiter::Int=20, tol::Float64=1e-14)
+    # Initialize starting values
+    M = mod(M, 2.0*pi)
+    if e < 0.8
+        E = M
+    else
+        E = pi
+    end
+
+    # Initialize working variable
+    f = E - e*sin(E) - M
+    i = 0
+
+    # Iterate until convergence
+    for it in 1:maxiter
+        if abs(f) < tol
+            break
+        end
+        f = E - e*sin(E) - M
+        E = E - f / (1.0 - e*cos(E))
+    end
+    return E
+end
+
+
+"""Convert mean anomaly to true anomaly"""
+function ma2ta(M::Real, e::Real)
+	EA = ma2ea(M, e)  # in radians
+	ta = 2*atan(sqrt((1+e)/(1-e))*tan(EA/2))
+    return ta
+end
