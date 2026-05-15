@@ -25,3 +25,21 @@ function get_sphere_mesh(r::Real=0.5, n::Int=30)
     end
     return GeometryBasics.Mesh(points, _faces)
 end
+
+
+
+"""Trailing window mean of length `n`; output has `length(vs) - n + 1` samples."""
+function moving_average(vs::AbstractVector{<:Real}, n::Int)
+    n >= 1 || throw(ArgumentError("window length n must be at least 1"))
+    m = length(vs) - n + 1
+    m < 1 && return [sum(vs) / length(vs)]
+    return [sum(@view vs[i:(i + n - 1)]) / n for i in 1:m]
+end
+
+"""`moving_average` padded at the front so output length matches `vs`."""
+function _moving_average_padded(vs::AbstractVector{<:Real}, n::Int)
+    avg = moving_average(vs, n)
+    return vcat(fill(avg[1], length(vs) - length(avg)), avg)
+end
+
+_wrap_to_pi(x) = mod(x + π, 2π) - π
