@@ -195,3 +195,17 @@ function ma2ta(M::Real, e::Real)
 	ta = 2*atan(sqrt((1+e)/(1-e))*tan(EA/2))
     return ta
 end
+
+
+"""Convert true anomaly to eccentric anomaly"""
+function ta2ea(ta::Real, e::Real)
+	E = 2*atan(tan(ta/2) / sqrt((1+e)/(1-e)))
+    return E
+end
+
+
+"""Convert true anomaly to mean anomaly"""
+function ta2ma(ta::Real, e::Real)
+	E = ta2ea(ta, e)
+    return E - e*sin(E)
+end
