@@ -3,7 +3,9 @@
 using LinearAlgebra
 using Test
 
-include(joinpath(@__DIR__, "..", "src", "AstrodynamicsCore.jl"))
+if !@isdefined AstrodynamicsCore
+    include(joinpath(@__DIR__, "..", "src", "AstrodynamicsCore.jl"))
+end
 
 @testset "kepler" begin
     MU = 398600.435507

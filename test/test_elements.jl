@@ -2,7 +2,9 @@
 
 using Test
 
-include(joinpath(@__DIR__, "..", "src", "AstrodynamicsCore.jl"))
+if !@isdefined AstrodynamicsCore
+    include(joinpath(@__DIR__, "..", "src", "AstrodynamicsCore.jl"))
+end
 
 @testset "kep2rv" begin
     # from https://naif.jpl.nasa.gov/pub/naif/PSYCHE/kernels/spk/de440.bsp.lbl
