@@ -7,16 +7,18 @@ on:
       - main
     tags: ["*"]
   pull_request:
+  workflow_dispatch:
 
-# https://documenter.juliadocs.org/stable/man/hosting/#Permissions
+# Publish static HTML from doc/build via GitHub Actions (not Jekyll /docs).
+# Repo Settings → Pages → Build and deployment → Source: GitHub Actions
 permissions:
+  contents: read
+  pages: write
+  id-token: write
   actions: write
-  contents: write
-  pull-requests: read
-  statuses: write
 
 concurrency:
-  group: docs-${{ github.ref }}
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,8 +30,19 @@ jobs:
         with:
           version: "lts"
       - uses: julia-actions/cache@v2
-      - name: Build and deploy
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      - name: Build documentation
         run: julia --project=doc doc/make.jl
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: doc/build
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -31,11 +31,3 @@ makedocs(
     checkdocs = :exports,
     warnonly = [:cross_references, :missing_docs],
 )
-
-if get(ENV, "GITHUB_ACTIONS", "false") == "true"
-    deploydocs(
-        repo = "github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl.git",
-        devbranch = "main",
-        deploy_config = Documenter.GitHubActions(),
-    )
-end
