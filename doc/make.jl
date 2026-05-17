@@ -3,13 +3,10 @@ import Pkg
 Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
-const PKG_ROOT = normpath(joinpath(@__DIR__, ".."))
-if !any(d -> d.name == "AstrodynamicsCore", values(Pkg.dependencies()))
-    Pkg.develop(Pkg.PackageSpec(path=PKG_ROOT))
-end
+const SRC = normpath(joinpath(@__DIR__, "..", "src"))
+include(joinpath(SRC, "AstrodynamicsCore.jl"))
 
 using Documenter
-using AstrodynamicsCore
 
 makedocs(
     modules = [AstrodynamicsCore],
