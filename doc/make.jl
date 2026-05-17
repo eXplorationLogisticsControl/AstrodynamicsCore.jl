@@ -36,6 +36,6 @@ if get(ENV, "GITHUB_ACTIONS", "false") == "true"
     deploydocs(
         repo = "github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl.git",
         devbranch = "main",
-        push = true,
+        deploy_config = Documenter.GitHubActions(),
     )
 end
