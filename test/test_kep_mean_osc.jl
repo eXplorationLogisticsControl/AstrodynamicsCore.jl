@@ -30,7 +30,7 @@ const J2_test = 1082.63e-6
     @test mean_coe ≈ mean_coe_check rtol = 1e-12
 end
 
-@testset "kep_osc2mean" begin
+@testset "kep_mean2osc roundtrip" begin
     osc_coe = [
         42165.727783078
         0.0003
