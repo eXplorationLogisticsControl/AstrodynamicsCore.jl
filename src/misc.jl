@@ -1,5 +1,10 @@
 """Misc helper functions"""
 
+"""
+    get_sphere_mesh(r=0.5, n=30)
+
+Build a unit-scale sphere mesh for visualization (GeometryBasics `Mesh`).
+"""
 function get_sphere_mesh(r::Real=0.5, n::Int=30)
     # Create vertices for a Sphere
     θ = LinRange(0, pi, n)

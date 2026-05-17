@@ -1,6 +1,12 @@
-"""Abstract planet object and associated methods"""
+"""Planet and ephemeris helpers."""
 
+"""
+    Planet(μ, t0, rv0, name="Planet")
 
+Simple Keplerian planet model with constant `μ`, epoch `t0`, and initial state `rv0`.
+
+The orbital period is inferred from `rv0` and stored in `planet.period`.
+"""
 mutable struct Planet
     μ::Real
     t0::Real
@@ -26,6 +32,11 @@ function Base.show(io::IO, planet::Planet)
 end
 
 
+"""
+    eph(planet, t)
+
+Propagate `planet` to time `t` and return the inertial state `[r; v]`.
+"""
 function eph(planet::Planet, t::Real)
     Δt = t - planet.t0
     return propagate_lagrangian(planet.μ, planet.rv0, planet.t0, Δt)
