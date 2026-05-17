@@ -15,6 +15,26 @@ function perifocal2geocentric(vec_pf::Vector, ω::Real, i::Real, Ω::Real)
 end
 
 
+function kep2rv_perifocal(kep::Array{<:Real,1}, μ::Real)
+	# unpack
+	a, e, i, Ω, ω, θ = kep
+    # angular momentum
+    if e <= 1.0
+        h = sqrt(a * μ * (1 - e^2))
+    else
+        h = sqrt(abs(a) * μ * (e^2 - 1))   # hyperbolic case
+    end
+    # perifocal vector
+    x = (h^2 / μ) * (1 / (1 + e * cos(θ))) * cos(θ)
+    y = (h^2 / μ) * (1 / (1 + e * cos(θ))) * sin(θ)
+    vx = (μ / h) * (-sin(θ))
+    vy = (μ / h) * (e + cos(θ))
+    rpf = [x, y, 0.0]
+    vpf = [vx, vy, 0.0]
+    return [rpf; vpf]
+end
+
+
 function kep2rv(kep::Array{<:Real,1}, μ::Real)
 	# unpack
 	a, e, i, Ω, ω, θ = kep
