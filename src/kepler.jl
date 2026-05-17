@@ -173,7 +173,8 @@ Function computes position at some future time t, via Keplerian time-propagation
     - `maxiter::Int`: max allowed iteration allowed for Laguerre-correction
 
 # Returns
-    - `tuple`: final state, final STM
+    - `state1`: final state `[r; v]` when `stm=false`
+    - `(state1, Φ)`: state and 6×6 STM when `stm=true`
 """
 function propagate_lagrangian(
     mu::Float64,
@@ -321,6 +322,13 @@ function propagate_lagrangian(
 end
 
 
+"""
+    time_until_θ(kep, θ, μ)
+
+Time of flight from true anomaly `kep[6]` to target true anomaly `θ` (rad).
+
+Assumes unperturbed Keplerian motion with gravitational parameter `μ`.
+"""
 function time_until_θ(kep::Array{<:Real,1}, θ::Real, μ::Real)
     a,e,_,_,_,θ0 = kep
     E0 = 2 * atan(sqrt((1-e)/(1+e)) * tan(θ0/2))

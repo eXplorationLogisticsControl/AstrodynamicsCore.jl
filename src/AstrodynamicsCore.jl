@@ -1,3 +1,9 @@
+"""
+    AstrodynamicsCore
+
+Core astrodynamics routines for orbital element conversions, Keplerian propagation,
+J2 mean/osculating mappings, and simple transfer helpers.
+"""
 module AstrodynamicsCore
 
 using FileIO

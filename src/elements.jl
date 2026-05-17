@@ -2,7 +2,10 @@
 
 
 """
-Convert 3-element vector from perifocal to geocentric frame
+    perifocal2geocentric(vec_pf, ω, i, Ω)
+
+Rotate a 3-vector from perifocal to inertial coordinates using argument of perigee `ω`,
+inclination `i`, and RAAN `Ω` (all radians).
 """
 function perifocal2geocentric(vec_pf::Vector, ω::Real, i::Real, Ω::Real)
     # rotate by ω
@@ -15,6 +18,13 @@ function perifocal2geocentric(vec_pf::Vector, ω::Real, i::Real, Ω::Real)
 end
 
 
+"""
+    kep2rv_perifocal(kep, μ)
+
+Convert Keplerian elements to position and velocity in the perifocal frame.
+
+Returns a 6-vector ``[r_x, r_y, r_z, v_x, v_y, v_z]`` with ``z = 0``.
+"""
 function kep2rv_perifocal(kep::Array{<:Real,1}, μ::Real)
 	# unpack
 	a, e, i, Ω, ω, θ = kep
@@ -35,6 +45,14 @@ function kep2rv_perifocal(kep::Array{<:Real,1}, μ::Real)
 end
 
 
+"""
+    kep2rv(kep, μ)
+
+Convert Keplerian elements to inertial position and velocity.
+
+`kep = [a, e, i, Ω, ω, θ]` uses semimajor axis `a`, eccentricity `e`, inclination `i`,
+right ascension of ascending node `Ω`, argument of perigee `ω`, and true anomaly `θ` (rad).
+"""
 function kep2rv(kep::Array{<:Real,1}, μ::Real)
 	# unpack
 	a, e, i, Ω, ω, θ = kep
@@ -61,6 +79,13 @@ function kep2rv(kep::Array{<:Real,1}, μ::Real)
 end
 
 
+"""
+    rv2kep(rv, μ)
+
+Convert inertial position and velocity to Keplerian elements.
+
+`rv` is `[r_x, r_y, r_z, v_x, v_y, v_z]`; returns `[a, e, i, Ω, ω, θ]`.
+"""
 function rv2kep(rv::Array{<:Real,1}, μ::Real)
     rvec = rv[1:3]
     vvec = rv[4:6]
@@ -84,6 +109,13 @@ function rv2kep(rv::Array{<:Real,1}, μ::Real)
 end
 
 
+"""
+    kep2mee(kep)
+
+Convert Keplerian elements to modified equinoctial elements (MEE).
+
+Returns `[p, f, g, h, k, l]` with ``l = Ω + ω + θ``.
+"""
 function kep2mee(kep::Array{<:Real,1})
     # unpack
     a, e, i, Ω, ω, θ = kep
@@ -98,6 +130,11 @@ function kep2mee(kep::Array{<:Real,1})
 end
 
 
+"""
+    mee2kep(mee)
+
+Convert modified equinoctial elements to Keplerian elements.
+"""
 function mee2kep(mee::Array{<:Real,1})
     # unpack
     p, f, g, h, k, l = mee
@@ -112,6 +149,11 @@ function mee2kep(mee::Array{<:Real,1})
 end
 
 
+"""
+    mee2rv(mee, μ)
+
+Convert modified equinoctial elements to inertial position and velocity.
+"""
 function mee2rv(mee::Array{<:Real,1}, μ::Real)
     p, f, g, h, k, l = mee
     sinL, cosL = sin(l), cos(l)
@@ -131,6 +173,13 @@ function mee2rv(mee::Array{<:Real,1}, μ::Real)
 end
 
 
+"""
+    rv2mee(rv, μ, retrograde=false)
+
+Convert inertial state to modified equinoctial elements.
+
+Set `retrograde=true` for retrograde equinoctial parameterization.
+"""
 function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
     rvec = rv[1:3]
     vvec = rv[4:6]
@@ -183,7 +232,11 @@ function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
 end
 
 
-"""Convert mean anomaly to eccentric anomaly"""
+"""
+    ma2ea(M, e; maxiter=20, tol=1e-14)
+
+Solve Kepler's equation and return eccentric anomaly `E` (rad) for mean anomaly `M` (rad).
+"""
 function ma2ea(M::Real, e::Real; maxiter::Int=20, tol::Float64=1e-14)
     # Initialize starting values
     M = mod(M, 2.0*pi)
@@ -209,7 +262,11 @@ function ma2ea(M::Real, e::Real; maxiter::Int=20, tol::Float64=1e-14)
 end
 
 
-"""Convert mean anomaly to true anomaly"""
+"""
+    ma2ta(M, e)
+
+Convert mean anomaly `M` (rad) to true anomaly (rad).
+"""
 function ma2ta(M::Real, e::Real)
 	EA = ma2ea(M, e)  # in radians
 	ta = 2*atan(sqrt((1+e)/(1-e))*tan(EA/2))
@@ -217,14 +274,22 @@ function ma2ta(M::Real, e::Real)
 end
 
 
-"""Convert true anomaly to eccentric anomaly"""
+"""
+    ta2ea(ta, e)
+
+Convert true anomaly `ta` (rad) to eccentric anomaly (rad).
+"""
 function ta2ea(ta::Real, e::Real)
 	E = 2*atan(tan(ta/2) / sqrt((1+e)/(1-e)))
     return E
 end
 
 
-"""Convert true anomaly to mean anomaly"""
+"""
+    ta2ma(ta, e)
+
+Convert true anomaly `ta` (rad) to mean anomaly (rad).
+"""
 function ta2ma(ta::Real, e::Real)
 	E = ta2ea(ta, e)
     return E - e*sin(E)
