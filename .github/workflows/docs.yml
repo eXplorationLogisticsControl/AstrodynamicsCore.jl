@@ -5,11 +5,19 @@ on:
     branches:
       - master
       - main
+    tags: ["*"]
   pull_request:
 
+# https://documenter.juliadocs.org/stable/man/hosting/#Permissions
 permissions:
   actions: write
   contents: write
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -20,5 +28,8 @@ jobs:
         with:
           version: "lts"
       - uses: julia-actions/cache@v2
-      - name: Build documentation
+      - name: Build and deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
         run: julia --project=doc doc/make.jl
