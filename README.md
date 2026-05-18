@@ -6,7 +6,7 @@ Core astrodynamics routines for orbit mechanics in Julia: element conversions, t
   <a href="https://github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl/actions/workflows/test.yml">
     <img src="https://github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl/actions/workflows/test.yml/badge.svg" alt="CI tests"/>
   </a>
-  <a href="https://github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl/actions/workflows/docs.yml">
+  <a href="https://explorationlogisticscontrol.github.io/AstrodynamicsCore.jl/">
     <img src="https://github.com/eXplorationLogisticsControl/AstrodynamicsCore.jl/actions/workflows/docs.yml/badge.svg" alt="Documentation build"/>
   </a>
 </p>
