@@ -47,4 +47,7 @@ function _moving_average_padded(vs::AbstractVector{<:Real}, n::Int)
     return vcat(fill(avg[1], length(vs) - length(avg)), avg)
 end
 
-_wrap_to_pi(x) = mod(x + π, 2π) - π
+
+function _wrap_to_pi(x)
+    return mod(x + π, 2π) - π
+end
