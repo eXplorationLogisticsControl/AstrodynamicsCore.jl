@@ -21,5 +21,8 @@ include("transfer.jl")
 
 export perifocal2geocentric, kep2rv, rv2kep, kep2mee, mee2kep, mee2rv, rv2mee
 export ma2ea, ma2ta, ta2ea, ta2ma
+export kep_osc2mean, kep_mean2osc
+export propagate_lagrangian
+export Planet, eph
 
 end # module AstrodynamicsCore
