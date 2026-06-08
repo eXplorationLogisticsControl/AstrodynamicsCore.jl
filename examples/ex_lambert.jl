@@ -8,14 +8,19 @@ include(joinpath(@__DIR__, "..", "src", "AstrodynamicsCore.jl"))
 
 r1 = [0.79, 0.0, 0.0]       # initial position vector
 r2 = [-0.6, 0.27, 0.15]     # final position vector
-tof = 5.21                  # time of fight
+tof = 12.21                 # time of fight
 mu =  1.0                   # gravitational parameter
-m = 0                       # max number of revolutions
+m = 1                       # max number of revolutions
 cw = false                  # whether to take clockwise path (default: false)
 
 res = AstrodynamicsCore.lambert(r1, r2, tof, m, mu, cw)
 
-x1 = [r1; res.v1]
+if m == 0
+    x1 = [r1; res.v1]
+else
+    x1 = [r1; res.v1[end]]
+    x2 = [r2; res.v2[end]]
+end
 times = LinRange(0.0, tof, 100)
 
 rvs = AstrodynamicsCore.propagate_lagrangian(mu, x1, 0.0, times)

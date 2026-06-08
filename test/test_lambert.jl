@@ -58,6 +58,53 @@ end
 end
 
 
+@testset "lambert_cw" begin
+    r1vec = [0.79, 0.0, 0.0]
+    r2vec = [-0.6, -0.17, 0.015]
+    mu = 1.0
+    m = 0
+    tofs = LinRange(1.2, 10.0, 10)
+
+    for tof in tofs
+        res_ccw = AstrodynamicsCore.lambert(r1vec, r2vec, tof, m, mu, false)
+        res_cw = AstrodynamicsCore.lambert(r1vec, r2vec, tof, m, mu, true)
+
+        @test res_ccw.exitflag == 1
+        @test res_cw.exitflag == 1
+        @test res_ccw.v1 != res_cw.v1
+
+        for res in (res_ccw, res_cw)
+            x0 = [r1vec; res.v1]
+            RV_final = AstrodynamicsCore.propagate_lagrangian(mu, x0, 0.0, tof)
+            @test norm(RV_final - [r2vec; res.v2]) < 1e-12
+        end
+    end
+end
+
+
+@testset "lambert_multi_rev" begin
+    r1vec = [1.0, 0.0, 0.0]
+    r2vec = [0.0, 1.0, 0.0]
+    mu = 1.0
+    tof = 8.0
+
+    res = AstrodynamicsCore.lambert(r1vec, r2vec, tof, 1, mu)
+    @test res isa AstrodynamicsCore.LambertMultiResults
+    @test res.exitflag == 1
+    @test length(res.v1) == 3
+    @test length(res.v2) == 3
+    @test res.revs == [0, 1, 1]
+    @test res.branch == [:zero, :left, :right]
+
+    for k in eachindex(res.v1)
+        x0 = [r1vec; res.v1[k]]
+        RV_final = AstrodynamicsCore.propagate_lagrangian(mu, x0, 0.0, tof)
+        @test norm(RV_final[1:3] - r2vec) < 1e-10
+        @test norm(RV_final[4:6] - res.v2[k]) < 1e-10
+    end
+end
+
+
 @testset "lambert_jacobians" begin
     # initial and final condition
     r1vec = [0.79, 0.0, 0.0]
