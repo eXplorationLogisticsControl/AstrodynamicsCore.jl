@@ -65,6 +65,8 @@ function lambert(
     tol::Float64 = 1.e-12,
     maxiter::Int = 20,
 )
+    @assert m == 0 "Multi-revolution Lambert problem is not implemented yet"
+    @assert cw == false "Clockwise motion is not implemented yet"
 
     # initialize
     exitflag = 0
