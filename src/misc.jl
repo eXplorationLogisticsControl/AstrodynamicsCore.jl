@@ -51,3 +51,13 @@ end
 function _wrap_to_pi(x)
     return mod(x + π, 2π) - π
 end
+
+
+function acos_safe(val)
+    return acos(max(-1.0, min(1.0, val)))
+end
+
+
+function asin_safe(val)
+    return asin(max(-1.0, min(1.0, val)))
+end
