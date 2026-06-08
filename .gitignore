@@ -31,3 +31,4 @@ JuliaLocalPreferences.toml
 
 # OSX temp file
 .DS_Store
+/__references
