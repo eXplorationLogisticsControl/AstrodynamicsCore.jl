@@ -181,7 +181,7 @@ function propagate_lagrangian(
     state0::Array{<:Real,1},
     t0::Float64,
     t::Float64,
-    tol::Float64 = 1e-12,
+    tol::Float64 = 1e-14,
     maxiter::Int = 20,
     verbose::Bool = false,
     stm::Bool = false,

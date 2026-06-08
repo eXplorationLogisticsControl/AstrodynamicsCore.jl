@@ -46,6 +46,24 @@ rv1, Φ = propagate_lagrangian(μ, rv0, 0.0, 600.0, 1e-12, 20, false, true)
 rvs = propagate_lagrangian(μ, rv0, 0.0, LinRange(0.0, 600.0, 50))
 ```
 
+## Lambert problem
+
+We can solve Lambert's problem as follows:
+
+```julia
+r1 = [0.79, 0.0, 0.0]       # initial position vector
+r2 = [-0.6, -0.17, 0.015]   # final position vector
+tof = 5.21                  # time of fight
+mu =  1.0                   # gravitational parameter
+m = 0                       # max number of revolutions
+cw = false                  # whether to take clockwise path (default: false)
+
+res = AstrodynamicsCore.lambert(r1, r2, tof, m, mu, cw)
+# res.v1 = velocity at r1
+# res.v2 = velocity at r2
+```
+
+
 ## J2 mean–osculating mapping
 
 ```julia
