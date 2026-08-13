@@ -3,6 +3,7 @@
 using Test
 
 include(joinpath(@__DIR__, "test_elements.jl"))
+include(joinpath(@__DIR__, "test_equinoctial.jl"))
 include(joinpath(@__DIR__, "test_anomaly.jl"))
 include(joinpath(@__DIR__, "test_transformations.jl"))
 include(joinpath(@__DIR__, "test_kepler.jl"))
