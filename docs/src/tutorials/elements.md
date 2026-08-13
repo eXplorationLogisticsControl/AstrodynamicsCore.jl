@@ -4,8 +4,8 @@
 CurrentModule = AstrodynamicsCore
 ```
 
-AstrodynamicsCore converts between Keplerian elements, modified equinoctial elements (MEE), and
-Cartesian states `[r_x, r_y, r_z, v_x, v_y, v_z]`.
+AstrodynamicsCore converts between Keplerian elements, modified equinoctial elements (MEE),
+ordinary equinoctial elements, and Cartesian states `[r_x, r_y, r_z, v_x, v_y, v_z]`.
 
 ## Conventions
 
@@ -22,6 +22,17 @@ mee = [p,f,g,h,k,L]
 ```
 
 where `L` is the osculating true longitude.
+
+**Ordinary equinoctial elements** are stored as
+
+```julia
+eq = [a, f, g, h, k, lambda]
+```
+
+where `a` is semimajor axis, `f = e cos(Ω + ω)`, `g = e sin(Ω + ω)`,
+`h = tan(i/2) cos Ω`, `k = tan(i/2) sin Ω`, and `lambda = Ω + ω + M` is
+instantaneous mean longitude. This differs from Walker MEE, which use
+semi-latus rectum `p` and true longitude `L`.
 
 See [Getting Started](@ref "Getting Started") for the full symbol table. Length and time units must be
 consistent with the gravitational parameter `μ` (km and seconds in the examples below).
@@ -89,6 +100,25 @@ and
 ```julia
 kep = mee2kep(mee)
 ```
+
+## Ordinary equinoctial elements
+
+The ordinary equinoctial conversions are
+
+```julia
+eq = kep2eq(kep)
+kep = eq2kep(eq)
+eq = rv2eq(rv, μ)
+rv = eq2rv(eq, μ)
+eq = mee2eq(mee)
+mee = eq2mee(eq)
+```
+
+The convention is prograde and elliptic (`a > 0`, `0 <= e < 1`). It is
+regular for circular and equatorial orbits but singular at `i = π`. Angles are
+radians and are not normalized to a prescribed interval; compare longitudes
+modulo `2π`. Length and time units are unchanged and must remain consistent
+with `μ`.
 
 
 ## Perifocal frame

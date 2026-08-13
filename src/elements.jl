@@ -232,6 +232,120 @@ function rv2mee(rv::Array{<:Real,1}, μ::Real, retrograde::Bool = false)
 end
 
 
+function _validate_equinoctial_elliptic(a, f, g, h, k)
+    a > zero(a) || throw(DomainError(a, "equinoctial semimajor axis must be positive"))
+    e2 = f^2 + g^2
+    e2 < one(e2) || throw(DomainError(e2, "ordinary equinoctial elements require eccentricity less than one"))
+    all(isfinite, (a, f, g, h, k)) || throw(DomainError((a, f, g, h, k), "equinoctial elements must be finite"))
+    return e2
+end
+
+
+"""
+    kep2eq(kep)
+
+Convert elliptic Keplerian elements `[a, e, i, raan, argp, ta]` to ordinary
+equinoctial elements `[a, f, g, h, k, lambda]`, where mean longitude is
+`lambda = raan + argp + M`. Angles are radians and are not wrapped to a
+prescribed interval.
+"""
+function kep2eq(kep::Array{<:Real,1})
+    a, e, i, raan, argp, ta = kep
+    a > zero(a) || throw(DomainError(a, "ordinary equinoctial elements require a positive semimajor axis"))
+    zero(e) <= e < one(e) || throw(DomainError(e, "ordinary equinoctial elements require 0 <= e < 1"))
+    zero(i) <= i < oftype(i, pi) || throw(DomainError(i, "prograde equinoctial elements require 0 <= i < pi"))
+
+    longitude_periapsis = raan + argp
+    f = e * cos(longitude_periapsis)
+    g = e * sin(longitude_periapsis)
+    h = tan(i / 2) * cos(raan)
+    k = tan(i / 2) * sin(raan)
+    lambda = longitude_periapsis + ta2ma(ta, e)
+    return [a, f, g, h, k, lambda]
+end
+
+
+"""
+    eq2kep(eq)
+
+Convert ordinary equinoctial elements `[a, f, g, h, k, lambda]` to elliptic
+Keplerian elements `[a, e, i, raan, argp, ta]`. Circular or equatorial
+classical angles use a consistent representative of the nonunique state.
+"""
+function eq2kep(eq::Array{<:Real,1})
+    a, f, g, h, k, lambda = eq
+    e2 = _validate_equinoctial_elliptic(a, f, g, h, k)
+    e = sqrt(e2)
+    inclination_component = sqrt(h^2 + k^2)
+    i = 2 * atan(inclination_component)
+    raan = iszero(inclination_component) ? zero(i) : atan(k, h)
+    longitude_periapsis = iszero(e) ? zero(e) : atan(g, f)
+    argp = longitude_periapsis - raan
+    mean_anomaly = lambda - longitude_periapsis
+    ta = ma2ta(mean_anomaly, e)
+    return [a, e, i, raan, argp, ta]
+end
+
+
+"""
+    mee2eq(mee)
+
+Convert prograde modified equinoctial elements `[p, f, g, h, k, L]` to
+ordinary equinoctial elements `[a, f, g, h, k, lambda]` for an elliptic orbit.
+"""
+function mee2eq(mee::Array{<:Real,1})
+    p, f, g, h, k, L = mee
+    p > zero(p) || throw(DomainError(p, "MEE semi-latus rectum must be positive"))
+    e2 = f^2 + g^2
+    e2 < one(e2) || throw(DomainError(e2, "ordinary equinoctial elements require eccentricity less than one"))
+    all(isfinite, (p, f, g, h, k, L)) || throw(DomainError(mee, "orbital elements must be finite"))
+
+    e = sqrt(e2)
+    longitude_periapsis = iszero(e) ? zero(e) : atan(g, f)
+    true_anomaly = L - longitude_periapsis
+    a = p / (one(e2) - e2)
+    lambda = longitude_periapsis + ta2ma(true_anomaly, e)
+    return [a, f, g, h, k, lambda]
+end
+
+
+"""
+    eq2mee(eq)
+
+Convert ordinary equinoctial elements `[a, f, g, h, k, lambda]` to prograde
+modified equinoctial elements `[p, f, g, h, k, L]` for an elliptic orbit.
+"""
+function eq2mee(eq::Array{<:Real,1})
+    a, f, g, h, k, lambda = eq
+    e2 = _validate_equinoctial_elliptic(a, f, g, h, k)
+    e = sqrt(e2)
+    longitude_periapsis = iszero(e) ? zero(e) : atan(g, f)
+    mean_anomaly = lambda - longitude_periapsis
+    true_anomaly = ma2ta(mean_anomaly, e)
+    p = a * (one(e2) - e2)
+    L = longitude_periapsis + true_anomaly
+    return [p, f, g, h, k, L]
+end
+
+
+"""
+    rv2eq(rv, mu)
+
+Convert an inertial Cartesian state to prograde ordinary equinoctial elements.
+The orbit must be elliptic and use units consistent with `mu`.
+"""
+rv2eq(rv::Array{<:Real,1}, mu::Real) = mee2eq(rv2mee(rv, mu))
+
+
+"""
+    eq2rv(eq, mu)
+
+Convert prograde ordinary equinoctial elements to an inertial Cartesian state.
+The orbit must be elliptic and use units consistent with `mu`.
+"""
+eq2rv(eq::Array{<:Real,1}, mu::Real) = mee2rv(eq2mee(eq), mu)
+
+
 """
     ma2ea(M, e; maxiter=20, tol=1e-14)
 

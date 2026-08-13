@@ -22,6 +22,7 @@ include("planet.jl")
 include("transfer.jl")
 
 export perifocal2geocentric, kep2rv, rv2kep, kep2mee, mee2kep, mee2rv, rv2mee
+export kep2eq, eq2kep, mee2eq, eq2mee, rv2eq, eq2rv
 export ma2ea, ma2ta, ta2ea, ta2ma
 export kep_osc2mean, kep_mean2osc
 export propagate_lagrangian
