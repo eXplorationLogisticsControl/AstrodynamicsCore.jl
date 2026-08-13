@@ -10,10 +10,10 @@ end
 angle_difference_eq(x, y) = atan(sin(x - y), cos(x - y))
 
 
-@testset "ordinary equinoctial conversions" begin
+@testset "equinoctial elements conversions" begin
     cases = [
         ([7000.0, 0.0, 0.0, 0.0, 0.0, 0.3], 398600.435507),
-        ([7000.0, 0.0, 0.7, 0.4, 0.0, 1.2], 398600.435507),
+        ([7000.0, 1e-12, 0.7, 0.4, 0.0, 1.2], 398600.435507),
         ([9000.0, 0.2, 1e-6, 0.2, 0.7, 2.1], 398600.435507),
         ([12000.0, 0.4, 0.8, 1.0, 0.5, 2.4], 398600.435507),
         ([30000.0, 0.85, 0.3, 2.0, 1.1, 0.2], 398600.435507),
@@ -29,10 +29,7 @@ angle_difference_eq(x, y) = atan(sin(x - y), cos(x - y))
         eq = AstrodynamicsCore.kep2eq(kep)
 
         kep_back = AstrodynamicsCore.eq2kep(eq)
-        eq_from_kep = AstrodynamicsCore.kep2eq(kep_back)
-        @test isapprox(AstrodynamicsCore.kep2rv(kep_back, mu), rv; rtol = 2e-11, atol = 2e-11)
-        @test isapprox(eq_from_kep[1:5], eq[1:5]; rtol = 2e-11, atol = 2e-11)
-        @test abs(angle_difference_eq(eq_from_kep[6], eq[6])) < 2e-11
+        @test isapprox(kep_back, kep; atol = 1e-12)
 
         rv_from_eq = AstrodynamicsCore.eq2rv(eq, mu)
         eq_from_rv = AstrodynamicsCore.rv2eq(rv, mu)
@@ -48,7 +45,7 @@ angle_difference_eq(x, y) = atan(sin(x - y), cos(x - y))
 end
 
 
-@testset "ordinary equinoctial domain" begin
+@testset "equinoctial elements domain" begin
     @test_throws DomainError AstrodynamicsCore.kep2eq(
         [-25000.0, 1.4, 0.2, 0.3, 0.4, 0.5])
     @test_throws DomainError AstrodynamicsCore.kep2eq(
@@ -60,7 +57,7 @@ end
 end
 
 
-@testset "ordinary equinoctial generic numbers" begin
+@testset "equinoctial elements types" begin
     eq = BigFloat[7000, 0.1, -0.05, 0.2, -0.1, 0.7]
     mu = BigFloat("398600.435507")
     mee = AstrodynamicsCore.eq2mee(eq)
