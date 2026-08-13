@@ -1,6 +1,6 @@
 name = "AstrodynamicsCore"
 uuid = "5a6b0320-136f-4178-8c7c-d24a6d4b07af"
-authors = ["Yuri <yuri.shimane@gmail.com>"]
+authors = ["@yuricst, @phungd3"]
 version = "0.1.0"
 
 [deps]
