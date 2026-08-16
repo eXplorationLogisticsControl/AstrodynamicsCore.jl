@@ -11,6 +11,13 @@ Core astrodynamics routines for orbit mechanics in Julia: element conversions, t
   </a>
 </p>
 
+## Install
+
+```julia-bash
+import Pkg;
+Pkg.add("AstrodynamicsCore");
+```
+
 ## Overview
 
 `AstrodynamicsCore` is a lightweight library for foundational orbital mechanics. It targets mission analysis workflows that need reliable Keplerian and modified equinoctial element conversions, universal-variable propagation (Déprit formulation), and first-order J2 mean–osculating element mappings (Schaub, Appendix G).
