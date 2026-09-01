@@ -13,7 +13,7 @@ Core astrodynamics routines for orbit mechanics in Julia: element conversions, t
 
 ## Install
 
-```julia-bash
+```julia
 import Pkg;
 Pkg.add("AstrodynamicsCore");
 ```
